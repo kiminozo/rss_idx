@@ -84,11 +84,26 @@ app.use(route.get('/', main));
 // }));
 app.use(route.get('/search', async ctx => {
     let key = ctx.request.query.key;
+    let type = ctx.request.query.type;
     let items = [];
-    if (key) {
+    let uri;
+    let url = "";
+    switch (type) {
+        case 'dmhy':
+            uri = dmhy_rss_url + key;
+            url = `/dmhy?key=${key}`;
+            break;
+        case 'acg':
+            uri = acg_rss_url + key;
+            url = `/acg?key=${key}`;
+            break;
+        default:
+            break;
+    }
+    if (key && type) {
         key = key.replace(' ', '+')
         const httpOptions = {
-            uri: dmhy_rss_url + key,
+            uri: uri,
             timeout: 3000,
             gzip: true,
         };
@@ -97,7 +112,7 @@ app.use(route.get('/search', async ctx => {
 
     await ctx.render('test', {
         'key': key,
-        'url': `/dmhy?key=${key}`,
+        'url': url,
         'items': items
     }, true)
 }));

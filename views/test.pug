@@ -10,6 +10,14 @@ html(lang='cn')
   body  
     .container
         form(class="input-group mb-3",action='/search')
+            select(class="custom-select,input-group-prepend" name="type")
+                - t = type == 'dmhy'
+                if t
+                    option(value="dmhy",selected="selected") 动漫花园
+                    option(value="acg") ACG.RIP
+                else
+                    option(value="dmhy") 动漫花园
+                    option(value="acg",selected="selected") ACG.RIP   
             input(type="text",name="key",value=key,class="form-control",placeholder="关键字",aria-describedby="button-addon2")
             div(class="input-group-append")
                 button(class="btn btn-outline-secondary" type="submit" id="button-addon2") 搜索
