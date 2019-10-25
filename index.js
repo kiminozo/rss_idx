@@ -1,10 +1,14 @@
-const https = require("https")
 const request = require("request")
+
 const Koa = require('koa')
 const route = require('koa-route');
-const MemoryStream = require('memorystream');
-var FeedParser = require('feedparser');
+const views = require('koa-views');
 
+const MemoryStream = require('memorystream');
+var feedparser = require('feedparser-promised');
+const {
+    resolve
+} = require('path');
 
 const app = new Koa()
 
@@ -14,7 +18,7 @@ const dmhy_rss_url = 'https://share.dmhy.org/topics/rss/rss.xml?keyword='
 function getBody(url) {
     return new Promise((resolve, reject) => {
         let stream = new MemoryStream();
-
+        request.gzip = true;
         request.get(url)
             .on('close', () => {
                 console.log("close");
@@ -51,32 +55,58 @@ async function proxy(ctx, base_url) {
 
 }
 
-const search = ctx => {
-    let parser = new FeedParser();
-    request.get('https://news.google.com/rss?hl=zh-CN&gl=CN&ceid=CN:zh-Hans')
-        .on('response', res => {})
-        .pipe(parser);
-    parser.on('meta', function (meta) {
-            console.log('===== %s =====', meta.title);
-        })
-        .on('readable', function () {
-            var stream = this,
-                item;
-            while (item = stream.read()) {
-                console.log('Got article: %s', item.title || item.description);
-            }
-        });
-}
+// const search = ctx => {
+//     let parser = new FeedParser();
+//     request.get('https://news.google.com/rss?hl=zh-CN&gl=CN&ceid=CN:zh-Hans')
+//         .on('response', res => {})
+//         .pipe(parser);
+//     parser.on('meta', function (meta) {
+//             console.log('===== %s =====', meta.title);
+//         })
+//         .on('readable', function () {
+//             var stream = this,
+//                 item;
+//             while (item = stream.read()) {
+//                 console.log('Got article: %s', item.title || item.description);
+//             }
+//         });
+// }
+app.use(views(resolve(__dirname, './views'), {
+    extension: 'pug'
+}));
 
 app.use(route.get('/', main));
-app.use(route.get('/test', test));
-app.use(route.get('/search', search));
+// app.use(route.get('/test', async ctx => {
+//     await ctx.render('test', {
+//         'hello': "hello1",
+//         'num': [1, 2, 3]
+//     }, true)
+// }));
+app.use(route.get('/search', async ctx => {
+    let key = ctx.request.query.key;
+    let items = [];
+    if (key) {
+        key = key.replace(' ', '+')
+        const httpOptions = {
+            uri: dmhy_rss_url + key,
+            timeout: 3000,
+            gzip: true,
+        };
+        items = await feedparser.parse(httpOptions);
+    }
+
+    await ctx.render('test', {
+        'key': key,
+        'url': `/dmhy?key=${key}`,
+        'items': items
+    }, true)
+}));
 app.use(route.get('/acg', async ctx => proxy(ctx, acg_rss_url)));
 app.use(route.get('/dmhy', async ctx => proxy(ctx, dmhy_rss_url)));
 
 
-//app.listen(3000);
+app.listen(3000);
 //console.log("service start http://localhost:3000/")
 //test()
 
-search()
+//search()
