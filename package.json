@@ -7,13 +7,14 @@
     "feedparser-promised": "^2.0.1",
     "koa": "^2.10.0",
     "koa-route": "^3.2.0",
-    "koa-views": "^6.2.1",
     "memorystream": "^0.3.1",
-    "pug": "^2.0.4",
     "request": "^2.88.0"
   },
   "devDependencies": {
     "@types/koa": "^2.0.51",
     "@types/koa-route": "^3.2.4"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
